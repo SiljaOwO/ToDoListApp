@@ -1,26 +1,110 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import React from 'react';
-import ExploreContainer from '../components/ExploreContainer';
-import './Home.css';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonFab, IonFabButton, IonButton, IonPopover, IonList, IonApp, IonIcon, IonRow, IonCol, } from '@ionic/react';
+import { addCircleOutline } from 'ionicons/icons';
 
-const Home: React.FC = () => {
-  return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Blank</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Blank</IonTitle>
+import { Task } from '../models/tasks';
+import { NewTaskForm } from "../components/ToDoForm";
+import { TasksList } from "../components/TodosList";
+
+
+interface State {
+  newTask: Task;
+  tasks: Task[];
+  showInputPopover: boolean;
+}
+
+export default class App extends React.Component<{}, State> {
+  state = {
+    newTask: {
+      id: 1,
+      name: ""
+    },
+    
+    tasks: [],
+    showInputPopover: false,
+  };
+
+  render() {
+    return (
+      <IonApp>
+        <IonHeader>
+          <IonToolbar color="primary">
+            <IonTitle className="ion-text-center">To Do -list</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <ExploreContainer />
-      </IonContent>
-    </IonPage>
-  );
-};
 
-export default Home;
+        <IonContent>
+          <IonPopover 
+            backdropDismiss={true}
+            isOpen={this.state.showInputPopover}
+            onDidDismiss={this.hidePopover}
+          >
+            <IonList>
+            <NewTaskForm
+              task={this.state.newTask}
+              onAdd={this.addTask}
+              onChange={this.handleTaskChange}
+            />
+            <div className="ion-text-center">
+              <IonButton onClick={this.hidePopover}> Close </IonButton>
+            </div>
+            </IonList>
+          </IonPopover>
+          <IonRow>
+            <IonCol className="ion-text-center" >
+              <TasksList tasks={this.state.tasks} onDelete={this.deleteTask} />
+            </IonCol>
+          </IonRow>
+          <IonRow>
+            <IonCol className="ion-text-center">
+              <IonButton className="ion-text-center" shape="round" fill="clear" onClick={this.showPopover}>
+                <IonIcon size="large" icon={ addCircleOutline }></IonIcon>
+              </IonButton>
+            </IonCol>
+          </IonRow>
+        </IonContent>
+      </IonApp>
+    );
+  }
+
+  private showPopover = () => {
+    this.setState({
+      showInputPopover: true,
+    });
+  }
+
+  private hidePopover = () => {
+    this.setState({
+      showInputPopover: false,
+    });
+  }
+
+  private addTask = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    this.setState(previousState => ({
+      newTask: {
+        id: previousState.newTask.id + 1,
+        name: ""
+      },
+      tasks: [...previousState.tasks, previousState.newTask]
+    }));
+  };
+
+  private handleTaskChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      newTask: {
+        ...this.state.newTask,
+        name: event.target.value
+      }
+    });
+  };
+
+  private deleteTask = (taskToDelete: Task) => {
+    this.setState(previousState => ({
+      tasks: [
+        ...previousState.tasks.filter(task => task.id !== taskToDelete.id)
+      ]
+    }));
+  };
+};
